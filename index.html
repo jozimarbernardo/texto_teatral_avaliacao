@@ -62,20 +62,39 @@
         const CheckCircle = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>;
         const AlertCircle = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>;
         const Info = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>;
+        const SaveIcon = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>;
 
         function TheaterActivity() {
-            const [answers, setAnswers] = useState({
+            // Estado Inicial Padrão
+            const initialAnswers = {
                 studentName: '', studentEmail: '',
                 q1: '', q2a: '', q2b: '', q2c: '', q2d: '',
-                q3a: '', // Será 'Sim' ou 'Não'
-                q3b: '', q4: '', q5a: '', q5b: '', q5c: '', q5d: '',
+                q3a: '', q3b: '', q4: '', q5a: '', q5b: '', q5c: '', q5d: '',
                 q6a: '', q6b: '', q7a: '', q7b: '', q7c: '',
                 q8: '', q9a: '', q9b: '', q10a: '', q10b: ''
+            };
+
+            // Inicializa o estado buscando no LocalStorage se houver
+            const [answers, setAnswers] = useState(() => {
+                const saved = localStorage.getItem('teatro_2a_serie_backup');
+                if (saved) {
+                    try {
+                        return JSON.parse(saved);
+                    } catch (e) {
+                        return initialAnswers;
+                    }
+                }
+                return initialAnswers;
             });
 
             const [status, setStatus] = useState({ type: '', message: '' });
             const [isSubmitting, setIsSubmitting] = useState(false);
             const [errors, setErrors] = useState({}); 
+
+            // Efeito para salvar automaticamente sempre que 'answers' mudar
+            useEffect(() => {
+                localStorage.setItem('teatro_2a_serie_backup', JSON.stringify(answers));
+            }, [answers]);
 
             const handleChange = (field, value) => {
                 setAnswers(prev => ({ ...prev, [field]: value }));
@@ -137,6 +156,12 @@
                         type: 'success', 
                         message: 'Atividade entregue com sucesso! O professor já recebeu suas respostas. ✓' 
                     });
+                    
+                    // Limpa o backup do localStorage após o sucesso
+                    localStorage.removeItem('teatro_2a_serie_backup');
+                    
+                    // Opcional: Limpar o formulário ou mantê-lo preenchido. 
+                    // Aqui vou manter preenchido para o aluno ver o que enviou, mas se recarregar a página virá vazio.
                     
                     setTimeout(() => {
                         const statusDiv = document.getElementById('status-area');
@@ -442,7 +467,11 @@
                                 {isSubmitting ? 'Enviando...' : 'ENTREGAR AVALIAÇÃO'}
                             </button>
 
-                            <p className="text-gray-400 text-xs mt-2">Certifique-se de ter respondido todas as questões antes de enviar.</p>
+                            <div className="flex items-center gap-2 text-gray-400 text-xs mt-2">
+                                <SaveIcon className="w-3 h-3" />
+                                <p>Rascunho salvo automaticamente</p>
+                            </div>
+                            <p className="text-gray-400 text-xs">Certifique-se de ter respondido todas as questões antes de enviar.</p>
                         </div>
 
                     </div>
